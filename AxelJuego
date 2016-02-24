@@ -63,6 +63,7 @@ public class Juego extends JFrame implements Runnable, KeyListener {
     private String sSalud;
     private Boolean bPausa;
     private SoundClip sBala;
+    private Image imaImagenVida;
 
     public Juego() {
         /*Funcion del init applet*/
@@ -78,7 +79,11 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         imaImagenFondo = Toolkit.getDefaultToolkit().getImage(urlImagenFondo);
 
         URL urlImagenBala = this.getClass().getResource("shot.png");
+        URL urlImagenVida = this.getClass().getResource("life.png");
         imaImagenBala = Toolkit.getDefaultToolkit().getImage(urlImagenBala);
+        imaImagenVida = Toolkit.getDefaultToolkit().getImage(urlImagenVida);
+        
+   
 
         // Creo el objeto para principal 
         basPrincipal = new Base(0, 0,
@@ -95,7 +100,7 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         iWIDTH = 1024;
         iHEIGHT = 768;
         iBasSalud = 5;
-        iVelmalo = 4;
+        iVelmalo = 3;
         iBasvidas = 5;
         iBaspuntuacion = 0;
 
@@ -113,17 +118,19 @@ public class Juego extends JFrame implements Runnable, KeyListener {
 
         timer = new Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // Aquí el código que queramos ejecutar.
-                for (int iI = 0; iI < 1; iI++) {
-                    //Numeros aleatorios para las posiciones de las manzanas
-                    iAleatorioX = (int) (Math.random() * 1168);
-                    iAleatorioY = (int) (Math.random() * 500 - 768);
+                if (!bPausa) {
+                    // Aquí el código que queramos ejecutar.
+                    for (int iI = 0; iI < 1; iI++) {
+                        //Numeros aleatorios para las posiciones de las manzanas
+                        iAleatorioX = (int) (Math.random() * 1168);
+                        iAleatorioY = (int) (Math.random() * 500 - 768);
 
-                    /*Creo a un malo arriba de la pantalla 
+                        /*Creo a un malo arriba de la pantalla 
             y dentro de sus limites  de X            */
-                    Base basMalo = new Base(iAleatorioX, iAleatorioY, imaImagenMalo);
-                    //añado al malo a la lista
-                    lklMalos.add(basMalo);
+                        Base basMalo = new Base(iAleatorioX, iAleatorioY, imaImagenMalo);
+                        //añado al malo a la lista
+                        lklMalos.add(basMalo);
+                    }
                 }
             }
         });
@@ -164,28 +171,31 @@ public class Juego extends JFrame implements Runnable, KeyListener {
      *
      */
     public void actualiza() {
-        sPuntuacion = Integer.toString(iBaspuntuacion);
-        sSalud = Integer.toString(iBasSalud);
-        sVidas = Integer.toString(iBasvidas);
-        repaint();
+        if (!bPausa) {
+            sPuntuacion = Integer.toString(iBaspuntuacion);
+            sSalud = Integer.toString(iBasSalud);
+            sVidas = Integer.toString(iBasvidas);
+            repaint();
 
-        //Caen los malos
-        for (Base basMalo : lklMalos) {
-            if (basMalo.activo) {
-                basMalo.setY(basMalo.getY() + iVelmalo);
-            }
+            //Caen los malos
+            for (Base basMalo : lklMalos) {
+                if (basMalo.activo) {
+                    basMalo.setY(basMalo.getY() + iVelmalo);
+                }
 
-            if (basMalo.destruido == true) {
-                //lo mandmos lejos
-                basMalo.setX(0);
-                basMalo.setY(-800);
+                if (basMalo.destruido == true) {
+                    //lo mandmos lejos
+                    basMalo.setX(0);
+                    basMalo.setY(-800);
+                }
             }
         }
-
+        /*
         for (Base basShot : lklShot) {
             basShot.setY(basShot.getX() - 5);
             System.out.println(basShot.getX());
         }
+         */
 
     }
 
@@ -248,7 +258,7 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         URL urlImagenFondo = this.getClass().getResource("fondo.jpg");
         Image imaImagenFondo = Toolkit.getDefaultToolkit().getImage(urlImagenFondo);
         graGraficaJframe.drawImage(imaImagenFondo, 0, 0, 1280, 768, this);
-
+        
         // Actualiza el Foreground.
         graGraficaJframe.setColor(getForeground());
         paint1(graGraficaJframe);
@@ -300,6 +310,11 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         graDibujo.drawString("Vidas: " + sVidas, 10, 90);
         graDibujo.drawString("Salud: " + sSalud, 10, 120);
 
+        if (bPausa) {
+            graDibujo.setColor(Color.white);
+            graDibujo.drawString("PAUSA", 595, 384);
+        }
+
     }
 
     public void keyTyped(KeyEvent ke) {
@@ -307,24 +322,32 @@ public class Juego extends JFrame implements Runnable, KeyListener {
     }
 
     public void keyPressed(KeyEvent keyEvent) {
-        if (keyEvent.getKeyCode() == KeyEvent.VK_LEFT) {
-            basPrincipal.setX(basPrincipal.getX() - 20);
+        if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_LEFT) {
+            basPrincipal.setX(basPrincipal.getX() - 30);
 
         }
 
-        if (keyEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
-            basPrincipal.setX(basPrincipal.getX() + 20);
+        if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_RIGHT) {
+            basPrincipal.setX(basPrincipal.getX() + 30);
 
         }
 
-        if (keyEvent.getKeyCode() == KeyEvent.VK_P) {
+        if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_P) {
+            bPausa = true;
+        } else if (bPausa && keyEvent.getKeyCode() == KeyEvent.VK_P) {
+            bPausa = false;
+        }
+
+        if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_SPACE) {
             sBala.play();
+            /*
             for (Base basShot : lklShot) {
                 basShot = new Base(basPrincipal.getX(), basPrincipal.getY() - 75, imaImagenBala);
                 //añado la bala
                 lklShot.add(basShot);
 
             }
+             */
 
         }
 
