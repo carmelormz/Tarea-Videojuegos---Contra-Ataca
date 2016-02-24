@@ -31,14 +31,13 @@ import javax.swing.Timer;
 
 /**
  *
- * @author AXEL
+ * @author Axel Ramírez - A00399692
  */
 public class Juego extends JFrame implements Runnable, KeyListener {
 
     private Base basPrincipal;         // Objeto principal
     private LinkedList<Base> lklMalos;  //Lista ligada de malos
-    private LinkedList<Base> lklBalas;  //Lista ligada de disparos
-    private LinkedList<Base> lklShot;
+    private LinkedList<Proyectil> lklBalas; //Lista ligada de balas
     boolean bGameover;
     private Image imaImagenJframe;   // Imagen a proyectar en Jframe	
     private Graphics graGraficaJframe;  // Objeto grafico de la Imagen
@@ -63,6 +62,8 @@ public class Juego extends JFrame implements Runnable, KeyListener {
     private String sSalud;
     private Boolean bPausa;
     private SoundClip sBala;
+    private SoundClip sDolor;
+    private SoundClip sMuere;
     private Image imaImagenVida;
 
     public Juego() {
@@ -82,8 +83,6 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         URL urlImagenVida = this.getClass().getResource("life.png");
         imaImagenBala = Toolkit.getDefaultToolkit().getImage(urlImagenBala);
         imaImagenVida = Toolkit.getDefaultToolkit().getImage(urlImagenVida);
-        
-   
 
         // Creo el objeto para principal 
         basPrincipal = new Base(0, 0,
@@ -92,10 +91,12 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         //Inicio mis variables
         sSong = new SoundClip("doom.wav");
         sBala = new SoundClip("disparo.wav");
-        sSong.setLooping(true);
-        sSong.play();
-        bPausa = false;
+        sDolor = new SoundClip("dolor.wav");
+        sMuere = new SoundClip("explota.wav");
+        //sSong.setLooping(true);
+        //sSong.play();
 
+        bPausa = false;
         iVelmalo = 3;
         iWIDTH = 1024;
         iHEIGHT = 768;
@@ -116,6 +117,7 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         iAleatorioSpawn = (int) (Math.random() * 3 + 8); //numero rand entre 8 y 10
         System.out.print("Malos: " + iAleatorioSpawn + "    ");
 
+        //Cada segundo se creará un malo
         timer = new Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (!bPausa) {
@@ -134,9 +136,9 @@ public class Juego extends JFrame implements Runnable, KeyListener {
                 }
             }
         });
+        //inicio el timer de creacion de malos
         timer.start();
 
-        /*Creo a los malos*/
         // se posiciona a principal  en el cuarto cuadrante 
         basPrincipal.setX(1114 / 2);
         basPrincipal.setY(646);
@@ -175,7 +177,6 @@ public class Juego extends JFrame implements Runnable, KeyListener {
             sPuntuacion = Integer.toString(iBaspuntuacion);
             sSalud = Integer.toString(iBasSalud);
             sVidas = Integer.toString(iBasvidas);
-            repaint();
 
             //Caen los malos
             for (Base basMalo : lklMalos) {
@@ -189,6 +190,11 @@ public class Juego extends JFrame implements Runnable, KeyListener {
                     basMalo.setY(-800);
                 }
             }
+        }
+        //que se mueva mi bala
+        for (Proyectil ptlBala : lklBalas) {
+            ptlBala.Avanza();
+
         }
         /*
         for (Base basShot : lklShot) {
@@ -214,6 +220,7 @@ public class Juego extends JFrame implements Runnable, KeyListener {
                 basMalo.setX(iAleatorioX);
                 basMalo.setY(iAleatorioY);
                 basMalo.activo = false;
+                sMuere.play();
             }
         }
 
@@ -241,8 +248,8 @@ public class Juego extends JFrame implements Runnable, KeyListener {
                 }
                 basMalo.activo = false;
                 basMalo.destruido = true;
+                sDolor.play();
             }
-
         }
     }
 
@@ -258,7 +265,7 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         URL urlImagenFondo = this.getClass().getResource("fondo.jpg");
         Image imaImagenFondo = Toolkit.getDefaultToolkit().getImage(urlImagenFondo);
         graGraficaJframe.drawImage(imaImagenFondo, 0, 0, 1280, 768, this);
-        
+
         // Actualiza el Foreground.
         graGraficaJframe.setColor(getForeground());
         paint1(graGraficaJframe);
@@ -285,8 +292,9 @@ public class Juego extends JFrame implements Runnable, KeyListener {
                     basMalo.paint(graDibujo, this);
                 }
 
-                for (Base basBala : lklBalas) {
-                    basBala.paint(graDibujo, this);
+                for (Proyectil ptlBala : lklBalas) {
+                    ptlBala.paint(graDibujo, this);
+
                 }
 
             } // sino se ha cargado se dibuja un mensaje 
@@ -339,15 +347,35 @@ public class Juego extends JFrame implements Runnable, KeyListener {
         }
 
         if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_SPACE) {
+            // emito sonido
             sBala.play();
-            /*
-            for (Base basShot : lklShot) {
-                basShot = new Base(basPrincipal.getX(), basPrincipal.getY() - 75, imaImagenBala);
-                //añado la bala
-                lklShot.add(basShot);
+            // creo bala
+            Proyectil ptlBala = new Proyectil(basPrincipal.getX() + 54,
+                    basPrincipal.getY() - 80, imaImagenBala, 'v', 6, 'a');
+            // añado la bala a la lista
+            lklBalas.add(ptlBala);
 
-            }
-             */
+        }
+
+        if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_A) {
+            // emito sonido
+            sBala.play();
+            // creo bala
+            Proyectil ptlBala = new Proyectil(basPrincipal.getX() + 54,
+                    basPrincipal.getY() - 80, imaImagenBala, 'd', 6, 'i');
+            // añado la bala a la lista
+            lklBalas.add(ptlBala);
+
+        }
+
+        if (!bPausa && keyEvent.getKeyCode() == KeyEvent.VK_S) {
+            // emito sonido
+            sBala.play();
+            // creo bala
+            Proyectil ptlBala = new Proyectil(basPrincipal.getX() + 54,
+                    basPrincipal.getY() - 80, imaImagenBala, 'd', 6, 'd');
+            // añado la bala a la lista
+            lklBalas.add(ptlBala);
 
         }
 
