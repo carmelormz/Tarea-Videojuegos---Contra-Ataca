@@ -35,5 +35,8 @@ public class Malo extends Base {
             setY(getY() + iVel); //Si no es Super Malo, solamente avanza hacia abajo
         }
     }
+    public void aumentarVelocidad() { 
+        iVel++;
+    }
     
 }
