@@ -6,7 +6,7 @@
 
 /**
  *
- * @author Carmelo y Axel
+ * @author Carmelo Ramriez A01175987 y Axel Ramirez A00399692
  * @Fecha 22/02/2016
  * @Tarea Contra-Ataca
  */
@@ -44,7 +44,7 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
     private Image imaGameOver; //Imagen Fin del juego
     private Image imaPausa; //Imagen en la pausa del juego
     private Image imaVida; //Imagen de las vidas
-    private LinkedList <Base> lklMalos; //Personajes Malos
+    private LinkedList <Malo> lklMalos; //Personajes Malos
     private LinkedList <Proyectil> lklBalas; //Linked List de Balas
     private int iVida; //Vida del Personaje
     private int iScore; //Puntaje del juego
@@ -90,8 +90,8 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
         basPersonaje.setY(iHEIGHT - basPersonaje.getAlto());
         
         //Posiciono Malos
-        for(Base basMalos: lklMalos){
-           posicionaMalos(basMalos);
+        for(Malo malMalos: lklMalos){
+           posicionaMalos(malMalos);
         }
         
         //Agregamos el KeyListener
@@ -123,7 +123,7 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
     
     public void inicializaLkl() {
         //Creo una Linked List de Base
-        lklMalos = new LinkedList <Base> ();
+        lklMalos = new LinkedList <Malo> ();
         //Creo una Linked List de Proyectil
         lklBalas = new LinkedList <Proyectil> ();
     }
@@ -131,20 +131,28 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
     public void crearMalos() {
         //Creo un numero al azahr entre 10 y 15
         int iRandom = (int)(Math.random() * 5 + 10);
+        //Creo un numero al azahar entre 1 y 2
+        int iRanSupMalos = (int)(Math.random() * 1 + 1); 
+        
+        for(int iC=0; iC  < iRanSupMalos; iC++){
+            //Creo la instancia del Super Malo
+            Malo maSuperMalo = new Malo(0 , 0 , imaMalos, 'S');
+            lklMalos.add(maSuperMalo); //Agrego el Malo a la lista
+        }
         
         //Creo los Malos al azahr
-        for(int iC=0; iC < iRandom; iC++){
+        for(int iC=0; iC < (iRandom - iRanSupMalos); iC++){
             //creo una instancia de Malos
-            Base basMalos = new Base(0, 0, imaMalos);
+            Malo maMalos = new Malo(0, 0, imaMalos, 'N');
             //añado el Malo creado a la lista
-            lklMalos.add(basMalos);
+            lklMalos.add(maMalos);
         }
     }
     
-    public void posicionaMalos(Base basObj) {
+    public void posicionaMalos(Malo malObj) {
         //reposiciona el malo
-        basObj.setY(-100); //Posiciono a los malos afuera del frame
-        basObj.setX((int)(Math.random() * (iWIDTH- basObj.getAncho()))); //Posiciono en un lugar random a los malos en el eje X
+        malObj.setY(-100); //Posiciono a los malos afuera del frame
+        malObj.setX((int)(Math.random() * (iWIDTH- malObj.getAncho()))); //Posiciono en un lugar random a los malos en el eje X
     }
     
     public void inicializaSonidos() {
@@ -179,12 +187,12 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
             }
 
             //Movimiento personajes malos
-            for(Base basMalo: lklMalos){
-                basMalo.setY(basMalo.getY() +  iVelocidad); //Avanza segun la velocidad establecida
+            for(Malo malMalo: lklMalos){
+                malMalo.avanza(basPersonaje); //llamamos la funcion del malo
             }
             //Movimiento de balas
             for(Proyectil ptlBala: lklBalas){
-                ptlBala.avanza();
+                ptlBala.avanza(); //llamamos la funcion del malo
             }
     }
     
@@ -216,7 +224,6 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
     public void checaColisionPersonaje(){
         //Checa si el planeta choca con la parte derecha del applet
          if(basPersonaje.getX() + basPersonaje.getAncho() >= getWidth()){
-             
              basPersonaje.setX(getWidth()- basPersonaje.getAncho());
          }
          //Checa si el planeta choca con la parte izquiera del applet
@@ -229,9 +236,9 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
     
     public void checaColisionMalos(){
         //Recorro toda la linked list de Malos
-        for(Base basMalo: lklMalos){
+        for(Malo malMalo: lklMalos){
                 //si el malo choca con el personaje
-                if(basPersonaje.colisiona(basMalo)){
+                if(basPersonaje.colisiona(malMalo)){
                     iScore -= 1; //Resto 1  a la puntuacion
                     if(iCont > 1){
                         iCont--;
@@ -241,12 +248,16 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
                         scVida.play(); //Sonido de eliminacion de vida
                         iCont = 10; //Regreso el contador a su valor inicial
                         iVelocidad ++; //Aumento la velocidad de los malos
+                        //Aumento la velocidad de todos los malos
+                        for(Malo malMalo2 : lklMalos){
+                            malMalo2.aumentarVelocidad(); //Aumento al velocidad del malo
+                        }
                     }
-                    posicionaMalos(basMalo); //reposiciono el malo 
-                }else if(basMalo.getY() + basMalo.getAlto() > getHeight()){ //Si se sale del frame
+                    posicionaMalos(malMalo); //reposiciono el malo 
+                }else if(malMalo.getY() + malMalo.getAlto() > getHeight()){ //Si se sale del frame
                       iScore -= 1; //resto un punto al score
                       scColision.play(); //sonido de Colision
-                      posicionaMalos(basMalo); //reposiciono el malo  
+                      posicionaMalos(malMalo); //reposiciono el malo  
                 }
                         
         }
@@ -254,24 +265,24 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
     }
     
     public void checaColisionBalas() { 
-        
+        //Si el malo choca con la bala, se reposicionan el malo y se elimina la bala
         for(int iC=0; iC < lklBalas.size(); iC++){
             Proyectil ptlBala = lklBalas.get(iC);
             for(int iK = 0 ; iK < lklMalos.size(); iK++){
-                Base basMalo = lklMalos.get(iK);
-                if(basMalo.colisiona(ptlBala)){
+                Malo malMalo = lklMalos.get(iK); //Copiamos el malo a otra variable
+                if(malMalo.colisiona(ptlBala)){
                     scBala.play();
-                    iScore += 10;
-                    lklBalas.remove(ptlBala);
-                    posicionaMalos(basMalo);
+                    iScore += 10; //Aumentamos en 10 el score
+                    lklBalas.remove(ptlBala); //Eliminamos la bala
+                    posicionaMalos(malMalo);//Reposicionamos
                 }
             }
         }
-    
+        //Si la bala choca con el frame, se elimina 
         for(int iC = 0; iC < lklBalas.size(); iC++){
-            Proyectil ptlBala = lklBalas.get(iC);
+            Proyectil ptlBala = lklBalas.get(iC); //Copiamos la bala a otra variable
             if(ptlBala.getY() < 0){
-                lklBalas.remove(ptlBala);
+                lklBalas.remove(ptlBala); //Eliminamos la bala
             }
         } 
     }
@@ -315,8 +326,8 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
                     basPersonaje.paint(graDibujo, this);
                     synchronized(this) {
                      //pinto cada malo
-                    for(Base basMalo: lklMalos){
-                        basMalo.paint(graDibujo, this);
+                    for(Malo malMalo: lklMalos){
+                        malMalo.paint(graDibujo, this);
                     }
                     //Pinto cada bala
                     for(Proyectil ptlBala : lklBalas){
@@ -386,7 +397,7 @@ public class TareaContraAtaca extends JFrame implements Runnable, KeyListener {
         
         //Si el usuario teclea la letra P se pausa el juego
         if(!bPausa && keEvent.getKeyCode() == KeyEvent.VK_P) {
-            bPausa = false;//Si se estaba jugando, el juego se pausa
+            bPausa = true;//Si se estaba jugando, el juego se pausa
         } else if(bPausa && keEvent.getKeyCode() == KeyEvent.VK_P){
             bPausa = false;  //Si ya estaba en pausa, cambiamos a false para que se continue jugando
         }
